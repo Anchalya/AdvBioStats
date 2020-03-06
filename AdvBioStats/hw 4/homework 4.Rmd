@@ -1,0 +1,172 @@
+---
+title: "Homework week 4"
+author: "Anchalya"
+date: "02/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Q2: Read file titanic into R
+#For the titanic dataset, which variables do you hypothesize might impact survival? Provide a justification for each. For the sake of this assignment, choose at least five variables you think can be supported. 
+```{r}
+titanic <- read.csv("titanic.csv")
+titanic
+#the variables I hypothesize might impact survival are class (because money would play a factor as to what type of accomadations these people get), age (because younger people would be more fit and have  health as an advantage to older poeple), fare, boat (would increase the chance of survival if they got on a bot) children (it would be harder for them to survive on thier own, the parents would have to risk more)
+
+```
+#Q3: Create some plots to examine the relationship between your predictor variables and the response (survival). For categorical predictor variables, use the mosaic function in the vcd library to create mosaic plots
+```{r}
+
+
+library(ggplot2)
+ggplot(data=titanic,aes(x=Gender,fill=survived))+geom_bar()
+
+ggplot(data=titanic,aes(x=Gender,fill= survived))+geom_bar() + facet_wrap(~pclass)
+
+ggplot(data=titanic,aes(x=pclass,fill=survived))+geom_bar()
+
+ggplot(data=titanic, aes(x=age,fill=survived))+geom_histogram(binwidth=5)
+
+ggplot(data=titanic,aes(x=fare,fill=survived))+geom_bar()
+
+ggplot(data=titanic,aes(x=survived,y=age,fill=Gender))+geom_boxplot()
+
+ggplot(data=titanic,aes(x=survived,y=fare,fill=Gender))+geom_boxplot()
+
+
+my.data <-read.csv('titanic.csv')
+pclass=c(data$pclass)
+survived=c(data$survived)
+mosaicplot(pclass~survived)
+mosaicplot(pclass~survived)
+
+gender=c(data$gender)
+survived=c(data$survived)
+mosaicplot(gender~survived)
+mosaicplot(gender~survived)
+
+fare=c(data$fare)
+survived=c(data$survived)
+mosaicplot(fare~survived)
+mosaicplot(fare~survived)
+
+sibsp=c(data$sibsp)
+survived=c(data$survived)
+mosaicplot(sibsp~survived)
+mosaicplot(sibsp~survived)
+
+logi.hist.plot(my.data$age,my.data$survival,boxp=FALSE,type="hist",col="gray", xlabel="age")
+```
+
+
+#Q4: Now we need to decide which variables to include in a final model. There are generally two ways to go: 1) Purposeful selection and automatic selection.Using the example code as a starting point, use the bestglm function in the bestglm package to identify the variables that lead to the best (lowest) AIC value. This is an automatic selection method.
+
+```{r}
+#install.packages('leaps')
+library(bestglm)
+my.variables=data.frame("age"=titanic$age,"gender"=titanic$Gender,"fare"=titanic$fare,"sibsp"=titanic$sibsp,"pclass"=titanic$pclass,"survival"=titanic$survived)
+#my.variables.nona=na.omit(my.variables)  #get rid of observations with NA
+bestglm(my.variables,IC="AIC",family=binomial) #response variable must be last column in dataframe
+
+```
+
+#Q5:Now run a logistic regression using the best model selected by the bestglm function. Provide the summary output for that regression.
+```{r}
+model1<-glm(survival~age+gender+pclass+sibsp, data=my.variables,family=binomial(link="logit"))
+summary.lm(model1)
+```
+
+#Q6:Now let’s see if we can create a better model via purposeful selection than through the automatic selection procedure above. Follow the example R code. First, do univariate regressions for each of the five predictor variables you hypothesized might be related to survival. Anything that comes out with a pvalue less than 0.25 can then be included in the full model. If anything comes out as not significant in the full model, try dropping it and comparing the reduced model to the full model using the lrtest function in the lmtest package. 
+```{r}
+univariate.age=glm(survival~age,data=my.variables, family=binomial(link="logit"))
+summary(univariate.age)
+
+univariate.gender=glm(survival~gender,data=my.variables, family=binomial(link="logit"))
+summary(univariate.gender)
+
+univariate.fare=glm(survival~fare,data=my.variables, family=binomial(link="logit"))
+summary(univariate.fare)
+
+univariate.sibsp=glm(survival~sibsp,data=my.variables, family=binomial(link="logit"))
+summary(univariate.sibsp)
+
+univariate.pclass=glm(survival~pclass,data=my.variables, family=binomial(link="logit"))
+summary(univariate.pclass)
+
+#include anything with p<0.25 in above univariate regressions
+model2<-glm(survival~gender+fare+pclass, data=my.variables, family=binomial(link="logit"))
+summary(model2)
+
+
+
+
+library(lmtest)
+lrtest(model2,model1)
+AIC(model1)
+AIC(model2)
+
+```
+
+#Q7: Did purposeful selection produce a different model than automatic selection? 
+```{r}
+#purposeful selcion produced a different model than automatic slection. model 1 is better than model 2 
+```
+
+#Q8: To view the effects of each predictor variable in your best model, use the allEffects function in the effects package. Were all effects in the direction you expected?
+```{r}
+library(effects)
+plot(allEffects(model1))
+```
+#Q9: Now let’s do some regression diagnostics. Complete the diagnostics under the example code for question 9. Note that there are many other diagnostics possible (link). In addition to the coded examples, you can type print(model1) and get a series of four plots that examine regression assumptions.
+
+```{r}
+library(car)
+residualPlots(model1)
+print(model1)
+```
+
+#Q10:Were there any results of concern in your regression diagnostics? 
+```{r}
+#because they are linear, I did not find any results of concern in my regression diagnostic.
+
+```
+#Q11: .Next, let’s check our model using k-fold cross validation. The example code is for 10-fold cross validation. It will divide the dataset randomly into 10 parts and then use each of the 10 datasets to test the model trained on the other nine datasets (i.e. each of the 10 parts will get a turn acting as the testing dataset). 
+
+```{r}
+library(caret)
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+my.variables$survival=as.factor(my.variables$survival)
+
+library(caret)
+ctrl <- trainControl(method = "repeatedcv", number = 10, savePredictions = TRUE)
+
+my.variables.nona<-na.omit(my.variables)
+my.variables.nona$survival=as.factor(my.variables.nona$survival)
+train(survival ~age+gender+pclass+sibsp,data=my.variables.nona, method="glm", family=binomial(link='logit'),
+                 trControl = ctrl, tuneLength = 5)
+
+
+
+```
+#Q12: 12.Based on your k-fold results, how good was your model at predicting which people would survive?
+```{r}
+#Accuracy= 78% 
+#my model is very good at predicting which people would survive
+```
+
+
+#Q13:Finally, let’s create a confusion matrix similar to the one discussed in class (link). What was the accuracy of your model according to this analysis? 
+```{r}
+predictions<-predict(model1, newdata=my.variables.nona,type="response")
+confusionMatrix(data=as.factor(as.numeric(predictions>0.5)),reference=my.variables.nona$survival)
+
+```
+
+
+#Q14:.Why do you think there is a difference in accuracy estimates between your kfold cross validation and the confusion matrix? 
+```{r}
+#The confusion matrix represents that model's performance for all of the data. However the kfold estimates betwwn folds or parts of the data. This is why I believe condusion matrix is more effective/ accurate because it looks at all of the data being used. 
+```
+
