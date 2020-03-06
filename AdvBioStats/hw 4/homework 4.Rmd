@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 titanic <- read.csv("titanic.csv")
 titanic
-#the variables I hypothesize might impact survival are class (because money would play a factor as to what type of accomadations these people get), age (because younger people would be more fit and have  health as an advantage to older poeple), fare, boat (would increase the chance of survival if they got on a bot) children (it would be harder for them to survive on thier own, the parents would have to risk more)
+#the variables I hypothesize might impact survival are class (because money would play a factor as to what type of accomadations these people get), age (because younger people would be more fit and have  health as an advantage to older poeple), fare which would suggest the income of the passanger allowing them more supoort in terms of surviving, gender (males may be deemed more fit) children (it would be harder for them to survive on thier own, the parents would have to risk more)
 
 ```
 #Q3: Create some plots to examine the relationship between your predictor variables and the response (survival). For categorical predictor variables, use the mosaic function in the vcd library to create mosaic plots
