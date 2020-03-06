@@ -162,6 +162,7 @@ train(survival ~age+gender+pclass+sibsp,data=my.variables.nona, method="glm", fa
 predictions<-predict(model1, newdata=my.variables.nona,type="response")
 confusionMatrix(data=as.factor(as.numeric(predictions>0.5)),reference=my.variables.nona$survival)
 
+#from looking at my analysis i can see that it  78% accurate and the predictions help back this up. 
 ```
 
 
