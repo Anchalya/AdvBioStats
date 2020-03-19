@@ -1,0 +1,106 @@
+---
+title: "Homework 5"
+author: "Anchalya"
+date: "17/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+crimedata=read.csv("crimedata.csv")
+crimedata10=read.csv("crimedata10.csv")
+crimedata
+crimedata10
+```
+
+#Q1:Work through the regression tree example I provided on My Learning Space. You should see an R Markdown file and the associated data files. The example is adapted from
+```{r}
+#i worked through them
+```
+#Q2:Now let’s build a regression tree to help predict crime rate according to some of the predictor variables found in crimedata.csv. Make sure to include expenditures on police in each state (ExpeditureYear) as well as the population size of the states (StateSize) and the number of low income families in each state (BelowWage). Also, include at least three other variables you think might be important predictors of crime rate. 
+```{r}
+#Building regression tree with training set
+m.rpart=rpart(CrimeRate~.,data=crimedata) 
+
+#summary of tree
+summary(m.rpart)
+
+
+```
+#Q3:Print a summary of your regression tree results. Which variables were most important in your tree? 
+```{r}
+#summary of tree
+summary(m.rpart)
+#the vairables that are more important in my tree is expenditure year, state size, and youth 
+```
+#Q4:Using the rpart.plot function, plot your regression tree. Provide a brief description in words of what the diagram is telling you. 
+```{r}
+rpart.plot(m.rpart, digits = 5, fallen.leaves = TRUE,tweak=1.3)
+#the value of each leaf is the predictions of crime rate for each vairbale. the diagram is telling me that there is a 49% probability that the expendture year is greater than 77 and 51% probability that it is less. for the state size to be greater than 23 there is a 25% probability and 23% probility it wont be. there is a 51% prbability that the expenditure is less than 77. the probaility of crime rate in youth less than 131 is 23%. 
+```
+#Q5:According to the plot from Q4, what are the mean crime rates for each group?
+```{r}
+#mean for expenditure year= 102.81, mean for node two is 84.4, mean for node 3 us 120, mean for node 4 is 72, mean for node 5 is 23, mean for node 6 is 23 and mean for node 7 is 27.
+```
+#Q6:Were any predictor variables excluded from your model? Why do you think they were excluded (i.e. how does the rpart function decide which variables to include)? This might take a little research on your part to figure out how the function works. 
+```{r}
+#several predictor variables were excluded from my model such as wages, bellowwages,mature wages,and southern. 
+# after doing some research on rpart I found that an overall measure of variable importance is the sum of the goodness of split measures for each split for which it was the primary variable, plus goodness * (adjusted agreement) for all splits in which it was a surrogate.
+```
+#Q7:Now, let’s use the model we developed with crimedata.csv to predict crime rates 10 years later. Import the crimedata10.csv file into R and use the predict function to predict crime rates given all of the predictor variables available in crimedata10.csv. See the red wine example posted on My Learning Space for help.
+```{r}
+p.rpart <- predict(m.rpart, crimedata10)
+p.rpart
+cor(p.rpart, crimedata10$CrimeRate,method="pearson")
+MAE(predicted = p.rpart,actual = crimedata10$CrimeRate)
+
+```
+#Q8:Run a Pearson correlation test using the cor function to determine how the predicted crime rate correlated with the actual crime rate listed in the crimedata10.csv file. What was the correlation coefficient from this analysis?
+```{r}
+cor(p.rpart, crimedata10$CrimeRate,method="pearson")
+
+#the correlation coefficient from this analysis is 0.6175
+```
+#Q9:Calculate the mean absolute error of your predictions. Do you think our model was very good at predicting crime rates?
+```{r}
+
+MAE(predicted = p.rpart,actual = crimedata10$CrimeRate)
+
+
+#The mean absolute error of my predictions is 24.32924. If you look at the crime rate data, crime rate is between 26-178. because my MAE is about 24, which is fairly small, I think my model is pretty good at prediciting crime rates 
+
+.
+```
+#Q10:Using the wine example as a starting point, figure out how to generate a null distribution for comparison with your model results. In other words, if you randomly assign crime rates to states and calculate the absolute error repeatedly, what would be the mean absolute error you would attain. An annotated example is provided in the last code chunk of the red wine example. 
+```{r}
+crime.data.test=crimedata10$CrimeRate
+actual1=crime.data.test
+
+MAE2 <- function(data,indices)  {
+  d<-data[indices]
+  return(mean(abs(actual1 - d)))
+}
+
+library(boot)
+guesses=boot(data=crime.data.test, statistic=MAE2, R=1000)
+
+{hist(guesses$t)
+abline(v=mean(guesses$t),col="red")}
+mean(guesses$t)
+
+#the mean absolute error is 0.44
+```
+#Q11:What is the mean absolute error when crime rates are randomly assigned to states (i.e. your output from Q9)? How does this compare with the error from your regression tree model?
+```{r}
+#my answer from question 9 is 24.32924.this is the mean absolute error of my predictions. it compares to my regression tree model because it tells me the pribability of error of the model. 
+
+```
+#Q12:Is the mean absolute error from your model significantly different from random chance? Provide the p-value estimated from comparison with your null distribution.
+```{r}
+p.value=length(which((guesses$t<0.5198)==T))/1000
+p.value
+#the absolute error from my model is different from my random chance. the pvalue is 0
+```
+
