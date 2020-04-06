@@ -1,0 +1,111 @@
+---
+title: "Final Project"
+author: "Anchalya"
+date: "29/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#1. Read File diet into R studio
+```{r}
+diet=read.csv("diet.csv")
+diet
+```
+#2. run T-test 
+```{r}
+# Research Question :which diet is the best for losing weight? 
+#I will be running a two sample t-test
+#HO: There is no difference between the two groups
+#HA: there is a difference between the two groups
+
+#Create a histogram of the data.
+
+
+hist(diet$weight6weeks,
+     main="Histogram of weight after 6 weeks on specific diet",
+     xlab="Weight",
+     border="blue",
+     col="orange",
+     )
+
+hist(diet$Diet,
+     main="Histogram of The Three Different Diets",
+     xlab="Type of Diet",
+     border="red",
+     col="blue",
+     )
+
+
+#Repeat t-test for pre and post weight
+hist(diet$weight.loss,
+     main="Histogram of weight loss differences",
+     xlab="weight",
+     border="red",
+     col="blue",
+     )
+#Let check mean weight losses of Diet 1 and Diet 3.
+t.test(weight.loss~Diet,data=diet[diet$Diet!="2",],var.equal = TRUE)
+#p<0.05 therefore we reject HO and accept HA
+#!= means youre not including that thing, in this case diet 2 
+
+# difference of means between the weight losses of Diet 1 and Diet 2 using Student’s t-test 
+t.test(weight.loss~Diet,data=diet[diet$Diet!="3",],var.equal = TRUE)
+
+#p>0.05 therefore we accept HO.
+
+
+```
+
+
+```{r}
+#First, I would like to make a new column "weight.loss" that tells us the difference between the intial and final weights after dieting.
+diet$weight.loss = diet$pre.weight - diet$weight6weeks 
+
+#Boxplot
+boxplot(weight.loss~Diet,data=diet,col="orange",
+        main="Boxplot of Weight Loss Differences Per Diet Type",
+        ylab = "Weight loss (kg)", xlab = "Diet type")
+abline(h=0,col="blue")
+
+
+```
+
+
+```{r}
+#run a Fisher’s, Welch’s and Kruskal-Wallis one-way ANOVA
+diet.fisher=aov(weight.loss~Diet,data=diet)
+diet.welch= oneway.test(weight.loss~Diet,data=diet)
+diet.kruskal= kruskal.test(weight.loss~Diet,data=diet)
+
+summary(diet.fisher)
+print(diet.welch)
+print(diet.kruskal)
+
+#You see the same results for the fishers ANOVA and ttest for pre.weight and weight6weeks
+
+
+summary(aov(weight.loss~Diet,data=diet[diet$Diet!="2",]))
+
+#model checks
+
+shapiro.test(residuals(diet.fisher))
+hist(residuals(diet.fisher))
+
+
+leveneTest(diet.fisher)
+
+TukeyHSD(diet.fisher)
+plot(TukeyHSD(diet.fisher))
+
+##the data set does meet the assumptions required for an anova
+#after running the Shapiro-Wilk's test, it is noted that the residuals of the fitted model are not normally distributed.
+```
+
+
+
+```{r}
+
+```
+
